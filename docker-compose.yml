@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   # ─── API FastAPI ─────────────────────────────────────────
@@ -17,7 +15,7 @@ services:
       - api_data:/app/data
     depends_on:
       ollama:
-        condition: service_healthy
+        condition: service_started   # La API se reintenta sola si Ollama aún no está listo
     networks:
       - praxis-net
     expose:
@@ -40,11 +38,11 @@ services:
     expose:
       - "11434"  # 👈 SOLO interno
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
+      test: ["CMD-SHELL", "ollama list > /dev/null 2>&1 || exit 1"]
+      interval: 10s
       timeout: 10s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 60s
 
 networks:
   praxis-net:
