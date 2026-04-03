@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+
+  # ─── API FastAPI ─────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: praxis-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DATABASE_URL=sqlite:////app/data/praxis.db
+    volumes:
+      - api_data:/app/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - praxis-net
+    expose:
+      - "8080:8000"   # 👈 SOLO interno
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── Ollama ─────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: praxis-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - praxis-net
+    expose:
+      - "11434"  # 👈 SOLO interno
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  praxis-net:
+    driver: bridge
+
+volumes:
+  api_data:
+  ollama_models:
