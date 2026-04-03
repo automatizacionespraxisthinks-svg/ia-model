@@ -15,11 +15,11 @@ services:
       - api_data:/app/data
     depends_on:
       ollama:
-        condition: service_started   # La API se reintenta sola si Ollama aún no está listo
+        condition: service_started
     networks:
       - praxis-net
     ports:
-      - "8080:8000"   # host:container — 8080 en el VPS → 8000 dentro del contenedor
+      - "127.0.0.1:8080:8000"  # Solo accesible desde localhost (nginx nativo hace proxy)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -36,7 +36,7 @@ services:
     networks:
       - praxis-net
     expose:
-      - "11434"  # 👈 SOLO interno
+      - "11434"  # Solo interno
     healthcheck:
       test: ["CMD-SHELL", "ollama list > /dev/null 2>&1 || exit 1"]
       interval: 10s

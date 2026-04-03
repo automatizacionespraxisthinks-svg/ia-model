@@ -80,3 +80,28 @@ async def list_models(
             for m in settings.available_models_list
         ]
     )
+
+
+@router.get("/models/{model_id}", response_model=ModelInfo)
+async def get_model(
+    model_id: str,
+    current_key: Annotated[APIKey, Depends(get_current_key)],
+) -> ModelInfo:
+    """
+    Devuelve info de un modelo específico.
+    n8n/LangChain llama este endpoint para validar que el modelo existe.
+    Los alias externos (gpt-3.5-turbo, gpt-4, etc.) también se resuelven aquí.
+    """
+    from app.services.model_router import MODEL_ALIASES
+
+    # Resolver alias externos al modelo local equivalente
+    resolved = MODEL_ALIASES.get(model_id.lower(), model_id)
+
+    # Verificar que el modelo (o su alias resuelto) existe
+    if resolved not in settings.available_models_list:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Model '{model_id}' not found. Available: {settings.available_models_list}",
+        )
+
+    return ModelInfo(id=model_id, created=int(time.time()), owned_by="praxis-ia")
