@@ -53,3 +53,42 @@ class ModelInfo(BaseModel):
 class ModelListResponse(BaseModel):
     object: str = "list"
     data: list[ModelInfo]
+
+
+# ─── Responses API (OpenAI nueva generación — usada por n8n ≥ 2.6) ────────────
+
+class ResponsesRequest(BaseModel):
+    """Formato de la nueva Responses API de OpenAI."""
+    model: str = Field(default="mistral")
+    input: str | list[dict] = Field(..., description="Texto o lista de mensajes")
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    max_output_tokens: int = Field(default=512, ge=1, le=32768)
+
+    model_config = {"extra": "ignore"}
+
+
+class ResponseOutputContentItem(BaseModel):
+    type: str = "output_text"
+    text: str
+
+
+class ResponseOutputItem(BaseModel):
+    type: str = "message"
+    id: str
+    role: str = "assistant"
+    content: list[ResponseOutputContentItem]
+
+
+class ResponsesUsage(BaseModel):
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+
+
+class ResponsesResponse(BaseModel):
+    id: str
+    object: str = "response"
+    created_at: int
+    model: str
+    output: list[ResponseOutputItem]
+    usage: ResponsesUsage

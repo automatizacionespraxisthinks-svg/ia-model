@@ -11,8 +11,14 @@ from app.schemas.chat import (
     ChatCompletionResponse,
     Choice,
     ChoiceMessage,
+    Message,
     ModelInfo,
     ModelListResponse,
+    ResponseOutputContentItem,
+    ResponseOutputItem,
+    ResponsesRequest,
+    ResponsesResponse,
+    ResponsesUsage,
     UsageInfo,
 )
 from app.services.metrics import metrics
@@ -79,6 +85,67 @@ async def list_models(
             ModelInfo(id=m, created=created, owned_by="praxis-ia")
             for m in settings.available_models_list
         ]
+    )
+
+
+@router.post("/responses", response_model=ResponsesResponse)
+async def responses(
+    request: ResponsesRequest,
+    current_key: Annotated[APIKey, Depends(get_current_key)],
+) -> ResponsesResponse:
+    """
+    Responses API — formato usado por n8n ≥ 2.6 / LangChain JS openai >= 0.4.
+    Convierte internamente a ChatCompletion y llama a Ollama.
+    """
+    # Normalizar input a lista de mensajes
+    if isinstance(request.input, str):
+        messages = [Message(role="user", content=request.input)]
+    else:
+        messages = [
+            Message(role=m.get("role", "user"), content=m.get("content", ""))
+            for m in request.input
+        ]
+
+    # Reutilizar la misma lógica de chat
+    chat_request = ChatCompletionRequest(
+        model=request.model,
+        messages=messages,
+        temperature=request.temperature,
+        max_tokens=request.max_output_tokens,
+    )
+    model = resolve_model(chat_request)
+
+    logger.info(
+        "Responses API | key=%s | model_req=%s | model_used=%s | messages=%d",
+        current_key.key_prefix, request.model, model, len(messages),
+    )
+
+    try:
+        result = await call_ollama(chat_request, model)
+    except OllamaError as exc:
+        metrics.record_request(model, 0, error=True)
+        raise HTTPException(status_code=exc.status_code, detail=str(exc))
+
+    metrics.record_request(model, result["duration_seconds"])
+
+    return ResponsesResponse(
+        id=f"resp_{uuid.uuid4().hex[:24]}",
+        object="response",
+        created_at=int(time.time()),
+        model=model,
+        output=[
+            ResponseOutputItem(
+                id=f"msg_{uuid.uuid4().hex[:24]}",
+                type="message",
+                role="assistant",
+                content=[ResponseOutputContentItem(type="output_text", text=result["content"])],
+            )
+        ],
+        usage=ResponsesUsage(
+            input_tokens=result["prompt_tokens"],
+            output_tokens=result["completion_tokens"],
+            total_tokens=result["prompt_tokens"] + result["completion_tokens"],
+        ),
     )
 
 
