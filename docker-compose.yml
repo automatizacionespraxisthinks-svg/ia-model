@@ -18,8 +18,8 @@ services:
         condition: service_started   # La API se reintenta sola si Ollama aún no está listo
     networks:
       - praxis-net
-    expose:
-      - "8080:8000"   # 👈 SOLO interno
+    ports:
+      - "8080:8000"   # host:container — 8080 en el VPS → 8000 dentro del contenedor
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
