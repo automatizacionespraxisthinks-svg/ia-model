@@ -18,15 +18,15 @@ class Settings(BaseSettings):
     ollama_max_retries: int = 3
 
     # Modelos
-    available_models: str = "mistral,llama3,phi3"
-    default_model: str = "mistral"
+    available_models: str = "qwen3.5,granite4.1"
+    default_model: str = "qwen3.5"
 
     # Router automático
     router_light_threshold: int = 500    # chars
     router_medium_threshold: int = 2000  # chars
-    router_light_model: str = "phi3"
-    router_medium_model: str = "mistral"
-    router_heavy_model: str = "llama3"
+    router_light_model: str = "granite4.1"
+    router_medium_model: str = "qwen3.5"
+    router_heavy_model: str = "qwen3.5"
 
     # Rate limiting
     rate_limit_per_minute: int = 60

@@ -55,9 +55,9 @@ Conecta herramientas como **n8n**, **LangChain** o cualquier cliente OpenAI a mo
                     │                    │   :11434    │   │
                     │                    │  (interno)  │   │
                     │                    ├─────────────┤   │
-                    │                    │  mistral    │   │
-                    │                    │  llama3     │   │
-                    │                    │  phi3       │   │
+                    │                    │  qwen3.5    │   │
+                    │                    │  granite4.1 │   │
+                    │                    │             │   │
                     │                    └─────────────┘   │
                     └─────────────────────────────────────┘
 ```
@@ -113,13 +113,15 @@ docker compose up -d --build
 ### 3. Descargar los modelos (una sola vez)
 
 ```bash
-docker compose exec ollama ollama pull mistral
-docker compose exec ollama ollama pull llama3
-docker compose exec ollama ollama pull phi3
+docker compose exec ollama ollama pull qwen3.5
+docker compose exec ollama ollama pull granite4.1:3b
+docker compose exec ollama ollama cp granite4.1:3b granite4.1:latest
 ```
 
-> `mistral` pesa ~4 GB, `llama3` ~4.7 GB, `phi3` ~2.3 GB.
-> Solo necesitas descargar los que vayas a usar.
+> `qwen3.5` (9b) pesa ~6.6 GB, `granite4.1:3b` ~2.1 GB.
+> El `ollama cp` re-tagea Granite como `:latest` para poder invocarlo como `granite4.1` sin tag.
+>
+> Alternativamente: `docker compose exec ollama bash /scripts/pull_models.sh`
 
 ### 4. Verificar
 
@@ -133,7 +135,7 @@ curl http://localhost/health
   "api": "ok",
   "ollama": {
     "status": "ok",
-    "models": ["mistral:latest", "llama3:latest", "phi3:latest"]
+    "models": ["qwen3.5:latest", "granite4.1:3b", "granite4.1:latest"]
   }
 }
 ```
@@ -168,7 +170,7 @@ curl -X POST http://localhost/v1/chat/completions \
   -H "Authorization: Bearer sk-AbCdEfGh..." \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "mistral",
+    "model": "qwen3.5",
     "messages": [
       {"role": "system", "content": "Eres un asistente útil y conciso."},
       {"role": "user", "content": "¿Cuál es la capital de Francia?"}
@@ -190,13 +192,13 @@ curl -X POST http://localhost/v1/chat/completions \
 | `OLLAMA_BASE_URL` | `http://ollama:11434` | URL interna de Ollama |
 | `OLLAMA_TIMEOUT` | `120` | Timeout en segundos por request a Ollama |
 | `OLLAMA_MAX_RETRIES` | `3` | Intentos máximos ante fallo de Ollama |
-| `AVAILABLE_MODELS` | `mistral,llama3,phi3` | Modelos habilitados (separados por coma) |
-| `DEFAULT_MODEL` | `mistral` | Modelo por defecto |
-| `ROUTER_LIGHT_THRESHOLD` | `500` | Chars para tier ligero (→ phi3) |
-| `ROUTER_MEDIUM_THRESHOLD` | `2000` | Chars para tier medio (→ mistral) |
-| `ROUTER_LIGHT_MODEL` | `phi3` | Modelo para prompts cortos |
-| `ROUTER_MEDIUM_MODEL` | `mistral` | Modelo para prompts medianos |
-| `ROUTER_HEAVY_MODEL` | `llama3` | Modelo para prompts largos |
+| `AVAILABLE_MODELS` | `qwen3.5,granite4.1` | Modelos habilitados (separados por coma) |
+| `DEFAULT_MODEL` | `qwen3.5` | Modelo por defecto |
+| `ROUTER_LIGHT_THRESHOLD` | `500` | Chars para tier ligero (→ granite4.1) |
+| `ROUTER_MEDIUM_THRESHOLD` | `2000` | Chars para tier medio (→ qwen3.5) |
+| `ROUTER_LIGHT_MODEL` | `granite4.1` | Modelo para prompts cortos |
+| `ROUTER_MEDIUM_MODEL` | `qwen3.5` | Modelo para prompts medianos |
+| `ROUTER_HEAVY_MODEL` | `qwen3.5` | Modelo para prompts largos |
 | `RATE_LIMIT_PER_MINUTE` | `60` | Requests por minuto por IP |
 | `DEBUG` | `false` | Activa logs detallados |
 
@@ -236,7 +238,7 @@ curl -X POST http://localhost/v1/chat/completions \
 
 ```json
 {
-  "model": "mistral",
+  "model": "qwen3.5",
   "messages": [
     {"role": "system", "content": "Eres un asistente útil."},
     {"role": "user", "content": "Explica qué es Docker en 2 líneas."}
@@ -253,7 +255,7 @@ curl -X POST http://localhost/v1/chat/completions \
   "id": "chatcmpl-a1b2c3d4e5f6",
   "object": "chat.completion",
   "created": 1704067200,
-  "model": "mistral",
+  "model": "qwen3.5",
   "choices": [
     {
       "index": 0,
@@ -328,21 +330,19 @@ El router resuelve qué modelo local usar en este orden de prioridad:
 
 | Modelo solicitado | Modelo local usado |
 |-------------------|--------------------|
-| `gpt-4`, `gpt-4-turbo`, `gpt-4o` | `llama3` |
-| `gpt-3.5-turbo`, `gpt-3.5-turbo-16k` | `mistral` |
-| `gemini-pro` | `mistral` |
-| `gemini-1.5-pro` | `llama3` |
-| `claude-3-opus` | `llama3` |
-| `claude-3-sonnet` | `mistral` |
-| `claude-3-haiku` | `phi3` |
+| `gpt-4`, `gpt-4-turbo`, `gpt-4o` | `qwen3.5` |
+| `gpt-3.5-turbo`, `gpt-3.5-turbo-16k` | `qwen3.5` |
+| `gemini-pro`, `gemini-1.5-pro` | `qwen3.5` |
+| `claude-3-opus`, `claude-3-sonnet` | `qwen3.5` |
+| `claude-3-haiku` | `granite4.1` |
 
 ### Selección automática (`"model": "auto"`)
 
 | Longitud total del prompt | Modelo elegido |
 |---------------------------|----------------|
-| < 500 chars | `phi3` (rápido, ligero) |
-| 500 – 2000 chars | `mistral` (equilibrado) |
-| > 2000 chars | `llama3` (máxima capacidad) |
+| < 500 chars | `granite4.1` (rápido, ligero — 3B) |
+| 500 – 2000 chars | `qwen3.5` (equilibrado — 9B) |
+| > 2000 chars | `qwen3.5` (máxima capacidad — 9B) |
 
 Los umbrales son configurables en `.env`.
 
@@ -366,10 +366,9 @@ Los umbrales son configurables en `.env`.
 
 Usar cualquiera de los listados en `/v1/models`, o los alias de OpenAI — todos funcionan:
 
-- `mistral` — mejor equilibrio velocidad/calidad
-- `llama3` — mayor capacidad de razonamiento
-- `phi3` — el más rápido, ideal para tareas simples
-- `gpt-3.5-turbo` — se mapea a `mistral` automáticamente
+- `qwen3.5` — modelo principal, 9B, mejor capacidad de razonamiento y multilingüe
+- `granite4.1` — más ligero (3B), ideal para tareas simples y respuestas rápidas
+- `gpt-3.5-turbo` / `gpt-4` — se mapean a `qwen3.5` automáticamente
 
 ---
 
@@ -424,9 +423,9 @@ nano .env   # cambiar SECRET_KEY y ADMIN_SECRET
 docker compose up -d --build
 
 # 4. Descargar modelos
-docker compose exec ollama ollama pull mistral
-docker compose exec ollama ollama pull llama3
-docker compose exec ollama ollama pull phi3
+docker compose exec ollama ollama pull qwen3.5
+docker compose exec ollama ollama pull granite4.1:3b
+docker compose exec ollama ollama cp granite4.1:3b granite4.1:latest
 
 # 5. Crear primera key
 source .env

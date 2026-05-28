@@ -10,18 +10,18 @@ logger = get_logger(__name__)
 # Mapeo de modelos externos a modelos locales
 MODEL_ALIASES: dict[str, str] = {
     # OpenAI
-    "gpt-4": "llama3",
-    "gpt-4-turbo": "llama3",
-    "gpt-4o": "llama3",
-    "gpt-3.5-turbo": "mistral",
-    "gpt-3.5-turbo-16k": "mistral",
+    "gpt-4": "qwen3.5",
+    "gpt-4-turbo": "qwen3.5",
+    "gpt-4o": "qwen3.5",
+    "gpt-3.5-turbo": "qwen3.5",
+    "gpt-3.5-turbo-16k": "qwen3.5",
     # Google
-    "gemini-pro": "mistral",
-    "gemini-1.5-pro": "llama3",
+    "gemini-pro": "qwen3.5",
+    "gemini-1.5-pro": "qwen3.5",
     # Anthropic
-    "claude-3-opus": "llama3",
-    "claude-3-sonnet": "mistral",
-    "claude-3-haiku": "phi3",
+    "claude-3-opus": "qwen3.5",
+    "claude-3-sonnet": "qwen3.5",
+    "claude-3-haiku": "granite4.1",
 }
 
 

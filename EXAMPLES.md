@@ -23,7 +23,7 @@ Respuesta esperada:
   "api": "ok",
   "ollama": {
     "status": "ok",
-    "models": ["mistral:latest", "llama3:latest", "phi3:latest"]
+    "models": ["qwen3.5:latest", "granite4.1:3b", "granite4.1:latest"]
   }
 }
 ```
@@ -80,7 +80,7 @@ curl -X POST "$API_URL/v1/chat/completions" \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "mistral",
+    "model": "qwen3.5",
     "messages": [
       {"role": "system", "content": "Eres un asistente útil y conciso."},
       {"role": "user", "content": "¿Cuál es la capital de Francia?"}
@@ -96,7 +96,7 @@ Respuesta:
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
   "created": 1704067200,
-  "model": "mistral",
+  "model": "qwen3.5",
   "choices": [
     {
       "index": 0,
@@ -128,7 +128,7 @@ curl -X POST "$API_URL/v1/chat/completions" \
     "messages": [{"role": "user", "content": "Hola!"}]
   }'
 ```
-> `gpt-3.5-turbo` se mapea automáticamente a `mistral`.
+> `gpt-3.5-turbo` se mapea automáticamente a `qwen3.5`.
 
 ---
 
@@ -143,7 +143,7 @@ curl -X POST "$API_URL/v1/chat/completions" \
     "messages": [{"role": "user", "content": "Hola"}]
   }'
 ```
-> Prompt corto → elige `phi3` automáticamente.
+> Prompt corto → elige `granite4.1` automáticamente.
 
 ---
 
@@ -182,4 +182,4 @@ En n8n, cuando agregues una credencial de **OpenAI**:
 | API Key | `sk-tu-key-generada` |
 | Base URL | `http://tu-vps-ip/v1` |
 
-Selecciona cualquier modelo listado en `/v1/models` o usa `gpt-3.5-turbo` (se mapea a mistral).
+Selecciona cualquier modelo listado en `/v1/models` o usa `gpt-3.5-turbo` (se mapea a `qwen3.5`).

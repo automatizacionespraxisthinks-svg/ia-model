@@ -81,13 +81,17 @@ docker compose ps
 
 ```bash
 # Descargar modelos (tarda varios minutos por modelo)
-docker compose exec ollama ollama pull mistral
-docker compose exec ollama ollama pull llama3
-docker compose exec ollama ollama pull phi3
+docker compose exec ollama ollama pull qwen3.5           # 9B, ~6.6 GB (modelo principal)
+docker compose exec ollama ollama pull granite4.1:3b     # 3B, ~2.1 GB (modelo ligero)
+
+# Retagear granite4.1:3b como :latest para que la API lo encuentre como "granite4.1"
+docker compose exec ollama ollama cp granite4.1:3b granite4.1:latest
 
 # Verificar modelos disponibles
 docker compose exec ollama ollama list
 ```
+
+> Alternativa: `docker compose exec ollama bash /scripts/pull_models.sh` ejecuta los 3 comandos.
 
 ---
 
@@ -174,8 +178,8 @@ Base URL: http://tu-vps-ip/v1
           (o https://ai.tu-dominio.com/v1 si usas SSL)
 ```
 
-En cualquier nodo de OpenAI de n8n, selecciona el modelo `mistral`, `llama3`, o `phi3`.
-También funciona con `gpt-3.5-turbo` (se mapea a mistral automáticamente).
+En cualquier nodo de OpenAI de n8n, selecciona el modelo `qwen3.5` o `granite4.1`.
+También funciona con `gpt-3.5-turbo` o `gpt-4` (se mapean a `qwen3.5` automáticamente).
 
 ---
 
@@ -193,7 +197,6 @@ Internet
     ▼
 [Ollama :11434]
     │  LLM inference
-    ├─ mistral
-    ├─ llama3
-    └─ phi3
+    ├─ qwen3.5    (9B, principal)
+    └─ granite4.1 (3B, ligero)
 ```
