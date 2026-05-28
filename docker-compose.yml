@@ -31,6 +31,10 @@ services:
     image: ollama/ollama:latest
     container_name: praxis-ollama
     restart: unless-stopped
+    environment:
+      # Mantiene los modelos cargados en RAM 24h (evita recarga lenta entre requests).
+      # Cambia a "5m" si necesitas liberar RAM más agresivamente.
+      - OLLAMA_KEEP_ALIVE=24h
     volumes:
       - ollama_models:/root/.ollama
       - ./scripts:/scripts:ro
