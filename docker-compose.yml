@@ -33,6 +33,7 @@ services:
     restart: unless-stopped
     volumes:
       - ollama_models:/root/.ollama
+      - ./scripts:/scripts:ro
     networks:
       - praxis-net
     expose:
