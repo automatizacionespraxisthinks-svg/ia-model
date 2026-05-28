@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://ollama:11434"
     ollama_timeout: int = 120
     ollama_max_retries: int = 3
+    # Razonamiento interno (qwen3.5, deepseek-r1, etc.).
+    # False = respuesta directa, mucho más rápido y compatible con n8n/LangChain.
+    # True = el modelo razona antes (mejor calidad en problemas complejos, mucho más lento).
+    ollama_enable_thinking: bool = False
 
     # Modelos
     available_models: str = "qwen3.5,granite4.1"

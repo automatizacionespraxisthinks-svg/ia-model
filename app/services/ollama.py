@@ -31,6 +31,9 @@ async def call_ollama(request: ChatCompletionRequest, model: str) -> dict[str, A
         "model": model,
         "messages": [{"role": m.role, "content": m.content} for m in request.messages],
         "stream": False,
+        # Desactivar el modo "thinking" de modelos como qwen3.5 — devuelve respuesta directa.
+        # Sin esto, el modelo gasta los tokens en razonamiento interno y deja content vacío.
+        "think": settings.ollama_enable_thinking,
         "options": {
             "temperature": request.temperature,
             "num_predict": request.max_tokens,
