@@ -37,6 +37,8 @@ class Settings(BaseSettings):
 
     # Admin
     admin_secret: str = "change-this-admin-secret"
+    admin_username: str = "admin"
+    admin_password: str = "change-this-admin-password"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Praxis IA · Admin · API Keys</title>
+  <link rel="stylesheet" href="/admin/static/styles.css" />
+</head>
+<body class="dash-body">
+  <header class="dash-header">
+    <div class="dash-brand">
+      <div class="logo-dot"></div>
+      <div>
+        <h1>Praxis IA Model</h1>
+        <p class="subtitle">Gestión de API keys</p>
+      </div>
+    </div>
+    <div class="dash-actions">
+      <span id="current-user" class="user-chip"></span>
+      <button id="logout-btn" class="btn-ghost" type="button">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <!-- ─── Crear nueva key ─────────────────────────────── -->
+    <section class="card">
+      <h2>Crear nueva API key</h2>
+      <form id="create-form" autocomplete="off">
+        <div class="form-row">
+          <div class="form-field grow">
+            <label for="key-name">Nombre descriptivo</label>
+            <input
+              type="text"
+              id="key-name"
+              name="name"
+              placeholder="Ej: n8n-produccion, integracion-web, etc."
+              maxlength="120"
+              required
+            />
+          </div>
+          <div class="form-field checkbox-field">
+            <label for="key-admin" class="checkbox-label">
+              <input type="checkbox" id="key-admin" name="is_admin" />
+              <span>Admin (puede gestionar otras keys)</span>
+            </label>
+          </div>
+          <div class="form-field">
+            <label>&nbsp;</label>
+            <button type="submit" id="create-btn">Generar key</button>
+          </div>
+        </div>
+        <p id="create-error" class="error hidden"></p>
+      </form>
+
+      <!-- Modal con la key recién creada -->
+      <div id="new-key-modal" class="modal hidden">
+        <div class="modal-card">
+          <h3>Tu nueva API key</h3>
+          <p class="warning">
+            Guárdala ahora en un lugar seguro.
+            <strong>No se podrá volver a mostrar.</strong>
+          </p>
+          <div class="key-display">
+            <code id="new-key-value"></code>
+            <button type="button" id="copy-key-btn" class="btn-secondary">Copiar</button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="close-modal-btn">Entendido</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Lista de keys ───────────────────────────────── -->
+    <section class="card">
+      <div class="card-header">
+        <h2>API keys existentes</h2>
+        <button type="button" id="refresh-btn" class="btn-ghost">↻ Refrescar</button>
+      </div>
+
+      <div id="keys-status" class="status-msg">Cargando...</div>
+
+      <div class="table-wrap">
+        <table id="keys-table" class="keys-table hidden">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Prefijo</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Creada</th>
+              <th>Último uso</th>
+              <th>Requests</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="keys-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/admin/static/dashboard.js"></script>
+</body>
+</html>

@@ -1,15 +1,17 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
-from app.api.routes import chat, health, keys
+from app.api.routes import admin_web, chat, health, keys
 from app.core.config import get_settings
 from app.core.database import init_db
 from app.core.logging_config import get_logger, setup_logging
@@ -78,6 +80,16 @@ async def generic_error_handler(request: Request, exc: Exception):
 app.include_router(health.router)                         # /health, /metrics
 app.include_router(chat.router,   prefix="/v1", tags=["chat"])
 app.include_router(keys.router,   prefix="/v1", tags=["api-keys"])
+app.include_router(admin_web.router, tags=["admin-web"])  # /admin, /admin/login, ...
+
+# Estáticos del panel admin (CSS / JS)
+_WEB_STATIC_DIR = Path(__file__).resolve().parent / "web" / "static"
+if _WEB_STATIC_DIR.is_dir():
+    app.mount(
+        "/admin/static",
+        StaticFiles(directory=_WEB_STATIC_DIR),
+        name="admin-static",
+    )
 
 
 @app.get("/", tags=["system"])
