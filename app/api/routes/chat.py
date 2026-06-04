@@ -97,12 +97,30 @@ async def responses(
     Responses API — formato usado por n8n ≥ 2.6 / LangChain JS openai >= 0.4.
     Convierte internamente a ChatCompletion y llama a Ollama.
     """
-    # Normalizar input a lista de mensajes
+    # Normalizar input a lista de mensajes.
+    # Responses API admite content como string o como lista de bloques
+    # tipo [{"type":"input_text","text":"..."}] — aplanamos ambos casos.
+    def _flatten_content(raw) -> str:
+        if isinstance(raw, str):
+            return raw
+        if isinstance(raw, list):
+            parts: list[str] = []
+            for item in raw:
+                if isinstance(item, dict):
+                    parts.append(item.get("text") or item.get("content") or "")
+                elif isinstance(item, str):
+                    parts.append(item)
+            return "".join(parts)
+        return ""
+
     if isinstance(request.input, str):
         messages = [Message(role="user", content=request.input)]
     else:
         messages = [
-            Message(role=m.get("role", "user"), content=m.get("content", ""))
+            Message(
+                role=m.get("role", "user"),
+                content=_flatten_content(m.get("content", "")),
+            )
             for m in request.input
         ]
 
@@ -128,19 +146,23 @@ async def responses(
 
     metrics.record_request(model, result["duration_seconds"])
 
+    text = result["content"]
     return ResponsesResponse(
         id=f"resp_{uuid.uuid4().hex[:24]}",
         object="response",
         created_at=int(time.time()),
+        status="completed",
         model=model,
         output=[
             ResponseOutputItem(
                 id=f"msg_{uuid.uuid4().hex[:24]}",
                 type="message",
+                status="completed",
                 role="assistant",
-                content=[ResponseOutputContentItem(type="output_text", text=result["content"])],
+                content=[ResponseOutputContentItem(type="output_text", text=text)],
             )
         ],
+        output_text=text,
         usage=ResponsesUsage(
             input_tokens=result["prompt_tokens"],
             output_tokens=result["completion_tokens"],

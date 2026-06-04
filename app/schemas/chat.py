@@ -75,6 +75,7 @@ class ResponseOutputContentItem(BaseModel):
 class ResponseOutputItem(BaseModel):
     type: str = "message"
     id: str
+    status: str = "completed"
     role: str = "assistant"
     content: list[ResponseOutputContentItem]
 
@@ -89,6 +90,8 @@ class ResponsesResponse(BaseModel):
     id: str
     object: str = "response"
     created_at: int
+    status: str = "completed"
     model: str
     output: list[ResponseOutputItem]
+    output_text: str = ""   # convenience field sintetizado, requerido por algunos clientes
     usage: ResponsesUsage
