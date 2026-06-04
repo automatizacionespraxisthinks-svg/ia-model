@@ -153,6 +153,8 @@ async def responses(
         created_at=int(time.time()),
         status="completed",
         model=model,
+        max_output_tokens=request.max_output_tokens,
+        temperature=request.temperature,
         output=[
             ResponseOutputItem(
                 id=f"msg_{uuid.uuid4().hex[:24]}",
@@ -162,7 +164,6 @@ async def responses(
                 content=[ResponseOutputContentItem(type="output_text", text=text)],
             )
         ],
-        output_text=text,
         usage=ResponsesUsage(
             input_tokens=result["prompt_tokens"],
             output_tokens=result["completion_tokens"],

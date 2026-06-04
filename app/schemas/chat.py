@@ -70,6 +70,7 @@ class ResponsesRequest(BaseModel):
 class ResponseOutputContentItem(BaseModel):
     type: str = "output_text"
     text: str
+    annotations: list = []
 
 
 class ResponseOutputItem(BaseModel):
@@ -80,18 +81,61 @@ class ResponseOutputItem(BaseModel):
     content: list[ResponseOutputContentItem]
 
 
+class ResponsesUsageDetails(BaseModel):
+    cached_tokens: int = 0
+
+
+class ResponsesUsageOutputDetails(BaseModel):
+    reasoning_tokens: int = 0
+
+
 class ResponsesUsage(BaseModel):
     input_tokens: int
+    input_tokens_details: ResponsesUsageDetails = ResponsesUsageDetails()
     output_tokens: int
+    output_tokens_details: ResponsesUsageOutputDetails = ResponsesUsageOutputDetails()
     total_tokens: int
 
 
+class ResponsesReasoning(BaseModel):
+    effort: str | None = None
+    summary: str | None = None
+
+
+class ResponsesTextFormat(BaseModel):
+    type: str = "text"
+
+
+class ResponsesTextConfig(BaseModel):
+    format: ResponsesTextFormat = ResponsesTextFormat()
+
+
 class ResponsesResponse(BaseModel):
+    """
+    Alineado al spec de OpenAI Responses API.
+    Los campos null/default existen para que el cliente openai-node y LangChain JS
+    pasen la validación de schema; sin ellos algunos parsers devuelven {}.
+    """
     id: str
     object: str = "response"
     created_at: int
     status: str = "completed"
+    error: None = None
+    incomplete_details: None = None
+    instructions: None = None
+    max_output_tokens: int | None = None
     model: str
     output: list[ResponseOutputItem]
-    output_text: str = ""   # convenience field sintetizado, requerido por algunos clientes
+    parallel_tool_calls: bool = True
+    previous_response_id: None = None
+    reasoning: ResponsesReasoning = ResponsesReasoning()
+    store: bool = True
+    temperature: float = 1.0
+    text: ResponsesTextConfig = ResponsesTextConfig()
+    tool_choice: str = "auto"
+    tools: list = []
+    top_p: float = 1.0
+    truncation: str = "disabled"
     usage: ResponsesUsage
+    user: None = None
+    metadata: dict = {}
