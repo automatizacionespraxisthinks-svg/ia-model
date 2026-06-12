@@ -35,6 +35,18 @@ services:
       # Mantiene los modelos cargados en RAM 24h (evita recarga lenta entre requests).
       # Cambia a "5m" si necesitas liberar RAM más agresivamente.
       - OLLAMA_KEEP_ALIVE=24h
+
+      # ─── Tuning para CPU (sin GPU) ──────────────────────
+      # Atención más rápida con menos memoria; aplica también en CPU moderna.
+      - OLLAMA_FLASH_ATTENTION=1
+      # Cuantiza el KV cache a 8 bits → reduce ~50% de RAM del cache de atención.
+      # Calidad prácticamente intacta, prefill más rápido en prompts largos.
+      - OLLAMA_KV_CACHE_TYPE=q8_0
+      # Una sola request a la vez (CPU no aguanta paralelo decente).
+      # Subir a 2 solo si concurrencia real lo justifica y hay RAM libre.
+      - OLLAMA_NUM_PARALLEL=1
+      # Permite mantener qwen3.5 + el clasificador 1.5b cargados simultáneamente.
+      - OLLAMA_MAX_LOADED_MODELS=2
     volumes:
       - ollama_models:/root/.ollama
       - ./scripts:/scripts:ro

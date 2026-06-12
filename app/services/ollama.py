@@ -27,6 +27,14 @@ async def call_ollama(request: ChatCompletionRequest, model: str) -> dict[str, A
     Llama a Ollama /api/chat y devuelve un dict con:
     {content, prompt_tokens, completion_tokens, duration_seconds}
     """
+    # Si el request trae max_tokens explícito, respétalo (con tope = num_predict global).
+    # Si no, usa el num_predict de settings.
+    requested_max = request.max_tokens or settings.ollama_num_predict
+    num_predict = min(requested_max, settings.ollama_num_predict)
+
+    # Si el request trae temperature, respétala; si no, usa el default de settings.
+    temperature = request.temperature if request.temperature is not None else settings.ollama_default_temperature
+
     payload = {
         "model": model,
         "messages": [{"role": m.role, "content": m.content} for m in request.messages],
@@ -34,9 +42,18 @@ async def call_ollama(request: ChatCompletionRequest, model: str) -> dict[str, A
         # Desactivar el modo "thinking" de modelos como qwen3.5 — devuelve respuesta directa.
         # Sin esto, el modelo gasta los tokens en razonamiento interno y deja content vacío.
         "think": settings.ollama_enable_thinking,
+        # Mantiene el modelo cargado entre llamadas (el .env de Ollama ya pone 24h por defecto).
+        "keep_alive": "24h",
         "options": {
-            "temperature": request.temperature,
-            "num_predict": request.max_tokens,
+            # Generación
+            "temperature": temperature,
+            "num_predict": num_predict,
+            "top_p": settings.ollama_top_p,
+            "repeat_penalty": settings.ollama_repeat_penalty,
+            # Runtime / CPU
+            "num_ctx": settings.ollama_num_ctx,
+            "num_thread": settings.ollama_num_thread,
+            "num_keep": settings.ollama_num_keep,
         },
     }
 

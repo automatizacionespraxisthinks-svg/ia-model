@@ -21,6 +21,23 @@ class Settings(BaseSettings):
     # True = el modelo razona antes (mejor calidad en problemas complejos, mucho más lento).
     ollama_enable_thinking: bool = False
 
+    # ─── Ollama runtime tuning (CPU-friendly) ─────────────────────────
+    # Tamaño del contexto. 4096 cubre prompts ~3000 tokens + 600 de salida holgadamente.
+    # Bajar a 2048 si tus prompts son cortos = prefill mucho más rápido.
+    ollama_num_ctx: int = 4096
+    # Tope máximo de tokens generados por respuesta. Evita que el modelo se extienda.
+    ollama_num_predict: int = 600
+    # Hilos de CPU. Ajustar al nº de cores físicos (no hyperthreads).
+    # En el VPS de 8 hilos lógicos, 4-6 físicos suele ser óptimo.
+    ollama_num_thread: int = 8
+    # Mantener todo el prompt en caché de prefijo (-1 = sin tope).
+    ollama_num_keep: int = -1
+    # Sampling
+    ollama_top_p: float = 0.9
+    ollama_repeat_penalty: float = 1.1
+    # Temperature por defecto si el request no la trae.
+    ollama_default_temperature: float = 0.3
+
     # Modelos
     available_models: str = "qwen3.5,granite4.1"
     default_model: str = "qwen3.5"
